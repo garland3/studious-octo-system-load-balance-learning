@@ -20,10 +20,10 @@ make_request() {
     response=$(curl -s http://localhost/ 2>/dev/null)
     
     if [ $? -eq 0 ]; then
-        # Parse the JSON response to extract serverId
-        server_id=$(echo "$response" | grep -o '"serverId":"[^"]*"' | cut -d'"' -f4)
-        timestamp=$(echo "$response" | grep -o '"timestamp":"[^"]*"' | cut -d'"' -f4)
-        hostname=$(echo "$response" | grep -o '"hostname":"[^"]*"' | cut -d'"' -f4)
+        # Parse the JSON response to extract serverId (handle multiline JSON)
+        server_id=$(echo "$response" | grep serverId | grep -o '"[^"]*"' | tail -1 | tr -d '"')
+        timestamp=$(echo "$response" | grep timestamp | grep -o '"[^"]*"' | tail -1 | tr -d '"')
+        hostname=$(echo "$response" | grep hostname | grep -o '"[^"]*"' | tail -1 | tr -d '"')
         
         echo -e "  Server ID: ${YELLOW}${server_id}${NC}"
         echo -e "  Hostname: ${server_id}"
@@ -100,8 +100,10 @@ show_distribution() {
     for i in $(seq 1 $num_requests); do
         response=$(curl -s http://localhost/ 2>/dev/null)
         if [ $? -eq 0 ]; then
-            server_id=$(echo "$response" | grep -o '"serverId":"[^"]*"' | cut -d'"' -f4)
-            echo "$server_id" >> "$temp_file"
+            server_id=$(echo "$response" | grep serverId | grep -o '"[^"]*"' | tail -1 | tr -d '"')
+            if [ -n "$server_id" ]; then
+                echo "$server_id" >> "$temp_file"
+            fi
         fi
     done
     
